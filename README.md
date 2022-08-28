@@ -44,16 +44,16 @@ The function `_test_local_variables` in `MWD.py` compares the two files and prin
 
 The following table shows the mapping of parameter names:
 
-`MWD.m` | `MWD.py`
+MWD.m | MWD.py
 --- | ---
- `cfd_delay` | `cfd_delay`
- `cfd_thresh` | `cfd_threshold`
- `tfilt_thresh` | `glitch_filter_threshold`
- `M` | `trapezoid_length`
- `L` | `rise_time`
- `torr` | `decay_time`
- `BLFL` | `baseline_fit_window`
- start value of `blank_count` | `baseline_length`
+ cfd_delay | cfd_delay
+ cfd_thresh | cfd_threshold
+ tfilt_thresh | glitch_filter_threshold
+ M | trapezoid_length
+ L | rise_time
+ torr | decay_time
+ BLFL | baseline_fit_window
+ start value of blank_count | baseline_length
 
 For convenience, reference files are provided for the test traces in [test_traces](./test_traces).
 These were generated using the following parameters:
