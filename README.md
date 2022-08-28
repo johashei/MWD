@@ -53,7 +53,7 @@ MWD.m | MWD.py
  L | rise_time
  torr | decay_time
  BLFL | baseline_fit_window
- start value of blank_count | baseline_length
+ blank_count _(start value)_ | baseline_length
 
 For convenience, reference files are provided for the test traces in [test_traces](./test_traces).
 These were generated using the following parameters:
