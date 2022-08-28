@@ -1,4 +1,3 @@
-import MWD as daq
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.polynomial import polynomial as npoly
@@ -7,38 +6,38 @@ import seaborn as sns
 import sys
 import warnings
 
+import MWD as daq
 
 def main():
     
     try:
-        traceDirectory = sys.argv[1]
-        energyOutFile = sys.argv[2]
+        trace_directory = sys.argv[1]
+        energy_outfile = sys.argv[2]
     except IndexError:
-        helpMessage = "Usage: python3 MWD_spectrum.py <directory containing traces> <file to which the energy values will be written>"
-        print(helpMessage)
+        help_message = "Usage: python3 MWD_spectrum.py <directory containing traces> <file to which the energy values will be written>"
+        print(help_message)
         sys.exit(0)
 
     # Trigger parameters
-    cfdDelay = 8
-    cfdThreshold = 150
-    glitchFilterThreshold = 75
+    cfd_delay = 8
+    cfd_threshold = 150
+    glitch_filter_threshold = 75
     # MWD parameters
-    trapezoidLength = 600
-    riseTime = 50
-    decayTime = 40e3
+    trapezoid_length = 600
+    rise_time = 50
+    decay_time = 40e3
     # Baseline parameters
-    BLFL = 100
-    baselineExtraLength = 110
-    baselineLength = trapezoidLength + riseTime + baselineExtraLength
+    baseline_fit_window = 100
+    baseline_extra_length = 110
+    baseline_length = trapezoid_length + rise_time + baseline_extra_length
     # Parameters for fitting the decay time
-    fullEnergyLowerBound = 1500 # read from output histogram
-    decayLength = 600
-    plot = 3
+    full_energy_lower_bound = 1500 # read from output histogram
+    decay_length = 600
+    plot = 3 # number of fits of the decay time to plot
 
     energies = []
-    fittedDecayTime = []
-    for file in os.scandir(traceDirectory):
-        # TODO: change so it can read from binary file format
+    fitted_decay_time = []
+    for file in os.scandir(trace_directory):
         try:
             sample, pulse = np.loadtxt(file, delimiter='\t', unpack=True)
         except ValueError:
@@ -51,28 +50,28 @@ def main():
             raise ex 
 
         cfd = daq.Trigger(pulse)
-        cfd.Set_parameters(cfdDelay, cfdThreshold, glitchFilterThreshold)
-        cfd.findTriggers()
-        triggerSampleNumbers = cfd.Get_triggerSampleNumbers()
-        if not triggerSampleNumbers.size:
+        cfd.set_parameters(cfd_delay, cfd_threshold, glitch_filter_threshold)
+        cfd.find_triggers()
+        trigger_sample_numbers = cfd.get_trigger_sample_numbers()
+        if not trigger_sample_numbers.size:
             continue
 
         mwd = daq.MWD(pulse)
-        mwd.Set_parameters(riseTime, decayTime, trapezoidLength)
-        mwd.doMWD()
-        trapezoid = mwd.Get_trapezoid()
+        mwd.set_parameters(rise_time, decay_time, trapezoid_length)
+        mwd.do_mwd()
+        trapezoid = mwd.get_trapezoid()
 
-        energySampleNumbers = triggerSampleNumbers + trapezoidLength
-        baseline = daq.findBaseline(trapezoid, triggerSampleNumbers, BLFL, baselineLength)
-        for sample in energySampleNumbers[energySampleNumbers < len(pulse)]:
+        energy_sample_numbers = trigger_sample_numbers + trapezoid_length
+        baseline = daq.find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_window, baseline_length)
+        for sample in energy_sample_numbers[energy_sample_numbers < len(pulse)]:
             energy = trapezoid[sample] - baseline[sample]
             energies.append(energy)
             
             # Fit decay time 
-            decay = pulse[sample - trapezoidLength+riseTime:sample]
-            x = np.asarray(range(sample - trapezoidLength+riseTime, sample))
+            decay = pulse[sample - trapezoid_length+rise_time:sample]
+            x = np.asarray(range(sample - trapezoid_length+rise_time, sample))
             fit = npoly.Polynomial.fit(x=x, y=np.log(decay), deg=1, w=np.sqrt(decay))
-            fittedDecayTime.append(-1/fit.convert().coef[1])
+            fitted_decay_time.append(-1/fit.convert().coef[1])
             if plot:
                 plt.plot(range(len(pulse)), pulse, label="data")
                 plt.plot(x, np.exp(fit.convert().coef[0])*np.exp(fit.convert().coef[1]*x), label="fit")
@@ -80,12 +79,12 @@ def main():
                 plt.show()
                 plot -= 1
 
-    np.savetxt(energyOutFile, energies)
+    np.savetxt(energy_outfile, energies)
 
     fig, ax = plt.subplots(1,2)
     sns.histplot(data=energies, bins=2000, ax=ax[0])
     ax[0].set_title("spectrum")
-    sns.scatterplot(x=energies, y=fittedDecayTime,  ax=ax[1])
+    sns.scatterplot(x=energies, y=fitted_decay_time,  ax=ax[1])
     ax[1].set_title("decay times")
     plt.show()
 
