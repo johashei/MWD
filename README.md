@@ -5,7 +5,7 @@ This class implements the moving window deconvolution. Assuming a signal
 $$
 P(t) = A\mathrm{e}^{-t/\tau} \quad \mathrm{for } t\geq 0, 
 $$
-the pulse heigh $A$ can be calculated by
+the pulse height $A$ can be calculated by
 $$
 A = P(t) + \frac{1}{\tau} \int_{t'=0}^{t} P(t')\mathrm{d}t' + P(t).
 $$
