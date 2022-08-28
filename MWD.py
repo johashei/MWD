@@ -4,15 +4,20 @@ import numpy as np
 import sys
 
 def main():
-    sample, pulse = np.loadtxt("../Documents/CERN_summer/project/MWD/matlab_code/trace4912.tsv", delimiter='\t', unpack=True)
+    pulse = np.loadtxt("./test_traces/single_pulse.txt")
     
     # Set parameters
+    ## CFD parameters
     cfd_delay = 8
     cfd_threshold = 150
     glitch_filter_threshold = 75
+    ## MWD parameters 
     trapezoid_length = 600
-    rise_time = 50
-    decay_time = 40e3
+    rise_time = 450
+    decay_time = 5e3
+    ## Baseline estimation parameters
+    baseline_length = trapezoid_length + rise_time + 110
+    baseline_fit_window = 100 
 
     cfd = Trigger(pulse, debug=True)
     cfd.set_parameters(cfd_delay, cfd_threshold, glitch_filter_threshold)
@@ -25,10 +30,7 @@ def main():
     mwd.do_mwd()
     trapezoid = mwd.get_trapezoid()
 
-    blank_total = trapezoid_length + rise_time + 110
-    baseline_fit_length = 100 
-    
-    baseline = find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_length, blank_total)
+    baseline = find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_window, baseline_length)
     
     energies = []
     for sample in energy_sample_numbers[energy_sample_numbers < len(pulse)]:
@@ -88,10 +90,10 @@ def _test_local_variables(reference_file="matlab_local_variables.tsv", file_to_t
     return 
 
 
-def find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_length, blank_total):
+def find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_window, baseline_length):
     baseline = np.copy(trapezoid)
-    for trigger_sample_number in trigger_sample_numbers[trigger_sample_numbers >= baseline_fit_length]:
-        baseline[trigger_sample_number:trigger_sample_number + blank_total] = trapezoid[trigger_sample_number]
+    for trigger_sample_number in trigger_sample_numbers[trigger_sample_numbers >= baseline_fit_window]:
+        baseline[trigger_sample_number:trigger_sample_number + baseline_length] = trapezoid[trigger_sample_number]
     return baseline
 
 
