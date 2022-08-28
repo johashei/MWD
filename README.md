@@ -4,7 +4,7 @@
 This class implements the moving window deconvolution. Assuming a signal 
 
 $$	
-P(t) = A\mathrm{e}^{-t/\tau} \quad \mathrm{for } t\geq 0,	
+P(t) = A\mathrm{e}^{-t/\tau} \quad \mathrm{for} \quad t\geq 0,	
 $$
 
 the pulse height $A$ can be calculated by
@@ -16,8 +16,10 @@ $$
 This expression is discretised as
 
 $$	
-A_i = P_i - P_{i-M} + \frac{1}{\tau}\sum_{k=i-M}^{i-1}P_k	
+A_i = P_i - P_{i-M} + \frac{1}{\tau}\sum_{k=i-M}^{i-1}P_k.	
 $$
+
+The sum itself is performed in the function `MWD.mwd` which is just-in-time compiled by `@numba.jit` for fast execution.
 
 ## The Trigger class
 
@@ -39,6 +41,19 @@ The function `_write_local_variables` in `MWD.py` generates a similar file.
 
 The function `_test_local_variables` in `MWD.py` compares the two files and prints the largest discrepancy for each variable.
 **Note that that the input parameters are not compared, meaning the user has to make sure they are the same.**
+
+The following table shows the mapping of parameter names:
+
+`MWD.m` | `MWD.py`
+--- | ---
+ `cfd_delay` | `cfd_delay`
+ `cfd_thresh` | `cfd_threshold`
+ `tfilt_thresh` | `glitch_filter_threshold`
+ `M` | `trapezoid_length`
+ `L` | `rise_time`
+ `torr` | `decay_time`
+ `BLFL` | `baseline_fit_window`
+ start value of `blank_count` | `baseline_length`
 
 For convenience, reference files are provided for the test traces in [test_traces](./test_traces).
 These were generated using the following parameters:
