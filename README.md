@@ -2,17 +2,11 @@
 
 ## The MWD class
 This class implements the moving window deconvolution. Assuming a signal 
-$$
-P(t) = A\mathrm{e}^{-t/\tau} \quad \mathrm{for } t\geq 0, 
-$$
+$$	P(t) = A\mathrm{e}^{-t/\tau} \quad \mathrm{for } t\geq 0,	$$
 the pulse height $A$ can be calculated by
-$$
-A = P(t) + \frac{1}{\tau} \int_{t'=0}^{t} P(t')\mathrm{d}t' + P(t).
-$$
+$$	A = P(t) + \frac{1}{\tau} \int_{t'=0}^{t} P(t')\mathrm{d}t' + P(t).	$$
 This expression is discretised as
-$$
-A_i = P_i - P_{i-M} + \frac{1}{\tau}\sum_{k=i-M}^{i-1}P_k
-$$
+$$	A_i = P_i - P_{i-M} + \frac{1}{\tau}\sum_{k=i-M}^{i-1}P_k	$$
 
 ## The Trigger class
 
