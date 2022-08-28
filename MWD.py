@@ -4,7 +4,12 @@ import numpy as np
 import sys
 
 def main():
-    pulse = np.loadtxt("./test_traces/single_pulse.txt")
+# When using the traces in test_traces, this is the only line that needs to change.
+    input_trace = "single_pulse"
+#    input_trace = "multiple_pulses"
+# ---------------------------------------------------------------------------------
+
+    signal = np.loadtxt("./test_traces/{inpu_trace}.dat")
     
     # Set parameters
     ## CFD parameters
@@ -18,48 +23,58 @@ def main():
     ## Baseline estimation parameters
     baseline_length = trapezoid_length + rise_time + 110
     baseline_fit_window = 100 
-
-    cfd = Trigger(pulse, debug=True)
+    
+    # Triggering
+    cfd = Trigger(signal, debug=True)
     cfd.set_parameters(cfd_delay, cfd_threshold, glitch_filter_threshold)
     cfd.find_triggers()
     trigger_sample_numbers = cfd.get_trigger_sample_numbers()
     energy_sample_numbers = trigger_sample_numbers + trapezoid_length
 
-    mwd = MWD(pulse)
+    # Moving window deconvolution
+    mwd = MWD(signal)
     mwd.set_parameters(rise_time, decay_time, trapezoid_length)
     mwd.do_mwd()
     trapezoid = mwd.get_trapezoid()
-
+    
+    # Energy estimation
     baseline = find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_window, baseline_length)
-    
     energies = []
-    for sample in energy_sample_numbers[energy_sample_numbers < len(pulse)]:
+    for sample in energy_sample_numbers[energy_sample_numbers < len(signal)]:
         energies.append(trapezoid[sample] - baseline[sample])
-    
     print(f"{energies = }")
-    
-    x = range(len(trapezoid))
-    plt.plot(x, trapezoid)
-    print(trigger_sample_numbers[0,0])
-    plt.axvline(trigger_sample_numbers[0,0])
-    plt.axvline(trigger_sample_numbers[0,0] + rise_time)
-    plt.axvline(trigger_sample_numbers[0,0] + rise_time + trapezoid_length)
-    plt.axvline(energy_sample_numbers[0,0], ls=':')
-    plt.show()
-
+ 
     # These two functions are used to check that this code gives the same result as MWD.m by James Lawson
     # See README.md for more information.
     _write_local_variables(mwd, cfd, baseline)
-    _test_local_variables()
+    _test_local_variables(f"./test_traces/{input_trace}_reference.tsv")
+
+    # Make explanatory figures
+    x = range(len(trapezoid))
+    fig, ax = plt.subplots(1, 2)
+    ax[0].set_title("Trace")
+    ax[1].set_title("signal after MWD")
+    ax[0].plot(x, signal)
+    ax[0].set_ylim(ax[0].get_ylim()) # so vlines don’t affect limit
+    ax[0].vlines(trigger_sample_numbers, *ax[0].get_ylim(), ls='--', colors='tab:orange', label="triggers")
+    ax[0].legend()
+    ax[1].plot(x, trapezoid)
+    ax[1].set_ylim(ax[1].get_ylim())
+    ax[1].vlines(trigger_sample_numbers, *ax[1].get_ylim(), ls='--', colors='tab:orange', label="triggers")
+    ax[1].vlines(energy_sample_numbers, *ax[1].get_ylim(), ls='--', colors='tab:green', label="energy readout")
+    ax[1].legend()
+    fig.tight_layout()
+    fig.savefig("MWD_and_Trigger.pdf", format='pdf')
+    plt.show()
 
     return 0
 
 def _write_local_variables(mwd: 'MWD', cfd: 'Trigger', baseline : np.ndarray, filename="python_local_variables.tsv"):
-    test_array = np.zeros([len(mwd.pulse), 8])
-    test_array[mwd.trapezoid_length:, 0] = mwd.pulse[mwd.trapezoid_length:] \
-                                         - mwd.pulse[:-mwd.trapezoid_length]
-    deconvoluted = mwd.mwd(mwd.pulse, mwd.decay_time, mwd.trapezoid_length)
-    test_array[:, 1] = moving_window_sum(deconvoluted, window=mwd.rise_time)/mwd.decay_time
+    test_array = np.zeros([len(mwd.signal), 8])
+    test_array[mwd.trapezoid_length:, 0] = mwd.signal[mwd.trapezoid_length:] \
+                                         - mwd.signal[:-mwd.trapezoid_length]
+    deconvoluted = mwd.mwd(mwd.signal, mwd.decay_time, mwd.trapezoid_length)
+    test_array[:, 1] = moving_window_sum(mwd.signal, window=mwd.trapezoid_length)/mwd.decay_time
     test_array[:, 2] = deconvoluted
     test_array[:, 3] = mwd.trapezoid
     test_array[:cfd.cfd_delay, 4] = 0
@@ -98,20 +113,20 @@ def find_baseline(trapezoid, trigger_sample_numbers, baseline_fit_window, baseli
 
 
 class Trigger(object):
-    def __init__(self, pulse, debug=False):
-        self.pulse = pulse
+    def __init__(self, signal, debug=False):
+        self.signal = signal
         self.debug = debug
-        self.is_trigger_sample = np.zeros_like(self.pulse, dtype=bool)
+        self.is_trigger_sample = np.zeros_like(self.signal, dtype=bool)
         self.filtered_trigger_pulse = None # this is only filled if debug is True
 
     def set_parameters(self, cfd_delay, cfd_threshold, glitch_filter_threshold): 
-        self.trigger_pulse = abs(self.pulse[cfd_delay:] - self.pulse[:-cfd_delay])
+        self.trigger_pulse = abs(self.signal[cfd_delay:] - self.signal[:-cfd_delay])
         self.cfd_delay = cfd_delay
         self.cfd_threshold = cfd_threshold
         self.glitch_filter_threshold = glitch_filter_threshold
       
     def get_trigger_sample_numbers(self):
-        return np.array(self.is_trigger_sample.nonzero())
+        return self.is_trigger_sample.nonzero()[0] # ndarray.nonzero returns a tuple of arrays
     
     def get_is_trigger_sample(self):
         return self.is_trigger_sample
@@ -148,8 +163,8 @@ class Trigger(object):
 
 
 class MWD(object):
-    def __init__(self, pulse):
-        self.pulse = pulse
+    def __init__(self, signal):
+        self.signal = signal
 
     def read_input_parameters(self, input_file_name):
         message = "Not implemented yet. Please call the 'set_parameters' method."
@@ -164,16 +179,16 @@ class MWD(object):
         return self.trapezoid
 
     def do_mwd(self):
-        deconvoluted = self.mwd(self.pulse, self.decay_time, self.trapezoid_length)
+        deconvoluted = self.mwd(self.signal, self.decay_time, self.trapezoid_length)
         self.trapezoid = moving_window_sum(deconvoluted, window=self.rise_time)/self.rise_time 
 
     @staticmethod
     @jit(nopython=True)
-    def mwd(pulse, decay_time, trapezoid_length):
-        deconvoluted = np.zeros_like(pulse)
-        deconvoluted[trapezoid_length:] = pulse[trapezoid_length:] \
-                                        + moving_window_sum(pulse, trapezoid_length)[trapezoid_length:]/decay_time \
-                                        - pulse[:-trapezoid_length]
+    def mwd(signal, decay_time, trapezoid_length):
+        deconvoluted = np.zeros_like(signal)
+        deconvoluted[trapezoid_length:] = signal[trapezoid_length:] \
+                                        + moving_window_sum(signal, trapezoid_length)[trapezoid_length:]/decay_time \
+                                        - signal[:-trapezoid_length]
         return (deconvoluted)
 
 
