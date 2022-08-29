@@ -81,11 +81,23 @@ def main():
 
     np.savetxt(energy_outfile, energies)
 
-    fig, ax = plt.subplots(1,2)
+    fig, ax = plt.subplots(1,2, figsize=(10,4))
     sns.histplot(data=energies, bins=2000, ax=ax[0])
     ax[0].set_title("spectrum")
+    ax[0].set_xlabel("energy channel")
+    ax[0].set_ylabel("counts", ha='right', rotation=0)
+    ax[0].yaxis.set_label_coords(0,1)
+    ax[0].set_xlim([200,2000])
     sns.scatterplot(x=energies, y=fitted_decay_time,  ax=ax[1])
     ax[1].set_title("decay times")
+    ax[1].set_xlabel("energy channel")
+    ax[1].set_ylabel("time sample", ha='right', rotation=0)
+    ax[1].yaxis.set_label_coords(0,1)
+    ax[1].set_xlim([-10,3500])
+    ax[1].set_ylim([-0.8e5, 2.2e5])
+    fig.tight_layout()
+    fig.savefig("spec_and_decay.pdf", format='pdf')
+
     plt.show()
 
 if __name__ == '__main__':

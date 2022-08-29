@@ -1,4 +1,6 @@
 .DS_Store
+__pycache__
 python_local_variables.tsv
 matlab_local_variables.tsv
+spectrum.csv
 
