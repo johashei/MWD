@@ -34,7 +34,7 @@ The sum itself is performed in the function `MWD.mwd` which is just-in-time comp
 ## The Trigger class
 
 The triggering is done in three steps. A trigger pulse is created which approximates the derivative of the input signal. It is then passed through a glitch filter which removes fluctuations below a user defined threshold. The filtered trigger pulse is used for the final triggering, which detects rises above the trigger threshold. 
-As for the MWD class, the loops are just-in-time compiled with `@numba.jit`.
+The loops are just-in-time compiled with `@numba.jit`.
 
 ---
 
