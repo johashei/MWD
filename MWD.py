@@ -64,7 +64,7 @@ def main():
     ax[1].vlines(energy_sample_numbers, *ax[1].get_ylim(), ls='--', colors='tab:green', label="energy readout")
     ax[1].legend()
     fig.tight_layout()
-    fig.savefig("MWD_and_Trigger.pdf", format='pdf')
+    fig.savefig("MWD_and_Trigger.png", format='png')
     plt.show()
 
     return 0

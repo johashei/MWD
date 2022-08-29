@@ -96,7 +96,7 @@ def main():
     ax[1].set_xlim([-10,3500])
     ax[1].set_ylim([-0.8e5, 2.2e5])
     fig.tight_layout()
-    fig.savefig("spec_and_decay.pdf", format='pdf')
+    fig.savefig("spec_and_decay.png", format='png')
 
     plt.show()
 
