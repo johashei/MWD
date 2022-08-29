@@ -5,11 +5,11 @@ import sys
 
 def main():
 # When using the traces in test_traces, this is the only line that needs to change.
-    input_trace = "single_pulse"
-#    input_trace = "multiple_pulses"
+#    input_trace = "single_pulse"
+    input_trace = "multiple_pulses"
 # ---------------------------------------------------------------------------------
 
-    signal = np.loadtxt("./test_traces/{inpu_trace}.dat")
+    signal = np.loadtxt(f"./test_traces/{input_trace}.dat")
     
     # Set parameters
     ## CFD parameters
@@ -102,6 +102,7 @@ def _test_local_variables(reference_file="matlab_local_variables.tsv", file_to_t
     sys.stdout.write("\nat")
     for idx in np.argmax(errors,0):
         sys.stdout.write(f" {idx:8d} ")
+    print()
     return 
 
 

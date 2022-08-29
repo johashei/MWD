@@ -3,7 +3,7 @@
 The moving window deconvolution and triggering are both implemented in the file	`MWD.py`. 
 The `main()` function in this file is meant to test the implementation and generate figures illustrating the moving window deconvolution process.
 
-![](./MWD_and_Trigger.png)
+![](./MWD_and_Trigger_single_pulse.png)![](./MWD_and_Trigger_multiple_pulses.png)
 
 The script `makeSpectrum.py` is an example of how one might use these classes to generate a spectrum. It also does an exponential fit of the decay of the traces.
 
