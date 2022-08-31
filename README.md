@@ -36,7 +36,7 @@ The sum itself is performed in the function `MWD.mwd` which is just-in-time comp
 The triggering is done in three steps. A trigger pulse is created which approximates the derivative of the input signal. It is then passed through a glitch filter which removes fluctuations below a user defined threshold. The filtered trigger pulse is used for the final triggering, which detects rises above the trigger threshold. 
 The loops are just-in-time compiled with `@numba.jit`.
 
----
+![](./steps.png)
 
 ### Comparing against `MWD.m`
 This code is meant to give the same result as `MWD.m` by James Lawson. To check this, when running `MWD.py` as main, a set of local variables can be written to a file, which can then be compared with a reference file written by `MWD.m`. 
